@@ -1,13 +1,20 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using SemanticLayerManager.Api.Application.Introspection;
+using SemanticLayerManager.Api.Application.Sync;
 using SemanticLayerManager.Api.Infrastructure.Introspection;
 using SemanticLayerManager.Api.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Services ──
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
+
+builder.Services.AddSingleton(TimeProvider.System);
 
 // Semantic layer store (our own code-first schema).
 builder.Services.AddDbContext<SemanticStoreDbContext>(options =>
@@ -18,6 +25,9 @@ builder.Services.AddScoped<ISchemaIntrospector>(_ =>
     new SqlServerSchemaIntrospector(
         builder.Configuration.GetConnectionString("SourceDb")
         ?? throw new InvalidOperationException("Missing 'SourceDb' connection string.")));
+
+// Sync engine.
+builder.Services.AddScoped<ISyncService, SyncService>();
 
 var app = builder.Build();
 
