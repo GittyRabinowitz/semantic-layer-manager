@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
     <!-- Pin the transitive Microsoft.OpenApi to a patched 2.x (advisory GHSA-v5pm-xwqc-g5wc); stays API-compatible with AspNetCore.OpenApi 10.x. -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 @SemanticLayerManager.Api_HostAddress = http://localhost:5281
 
-GET {{SemanticLayerManager.Api_HostAddress}}/weatherforecast/
+### OpenAPI document (Development only)
+GET {{SemanticLayerManager.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
 ###
