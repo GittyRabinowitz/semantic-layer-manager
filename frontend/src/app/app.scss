@@ -1,0 +1,11 @@
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  gap: 10px;
+
+  .brand { font-weight: 600; letter-spacing: 0.2px; }
+  .spacer { flex: 1 1 auto; }
+
+  a.active { text-decoration: underline; font-weight: 700; }
+}

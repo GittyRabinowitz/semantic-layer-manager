@@ -1,0 +1,144 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Semantic Layer — Management</h1>
+      <p class="subtitle">Map technical columns to business terms. New columns appear here after a sync.</p>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button mat-flat-button color="primary" (click)="runSync()" [disabled]="loading()">
+      <mat-icon>sync</mat-icon> Sync now
+    </button>
+
+    <input #fileInput type="file" accept=".json,application/json" hidden (change)="onFileSelected($event)">
+    <button mat-stroked-button (click)="fileInput.click()" [disabled]="loading()">
+      <mat-icon>upload_file</mat-icon> Upload metadata
+    </button>
+
+    <mat-slide-toggle [checked]="unmappedOnly()" (change)="unmappedOnly.set($event.checked)">
+      Needs attention only
+    </mat-slide-toggle>
+
+    <span class="grow"></span>
+
+    <div class="summary">
+      <span class="pill">Fields: {{ totalFields() }}</span>
+      <span class="pill ok">Mapped: {{ mappedCount() }}</span>
+      <span class="pill warn">Unmapped: {{ unmappedCount() }}</span>
+      @if (attentionCount() > 0) {
+        <span class="pill alert">Attention: {{ attentionCount() }}</span>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  @if (syncReport(); as report) {
+    <mat-card class="sync-report" appearance="outlined">
+      <mat-card-content>
+        <div class="report-line">
+          <mat-icon>info</mat-icon>
+          <span>
+            Last sync: {{ report.tablesTotal }} tables, {{ report.columnsTotal }} columns —
+            <b>{{ report.newColumns }}</b> new,
+            <b>{{ report.orphanedColumns }}</b> orphaned,
+            <b>{{ report.typeChangedColumns }}</b> type-changed,
+            <b>{{ report.restoredColumns }}</b> restored.
+          </span>
+        </div>
+        @if (report.changes.length > 0) {
+          <ul class="changes">
+            @for (change of report.changes; track $index) {
+              <li>
+                <span class="chg chg-{{ change.changeType.toLowerCase() }}">{{ change.changeType }}</span>
+                {{ change.table }}.{{ change.column }}
+                @if (change.detail) { <span class="detail">— {{ change.detail }}</span> }
+              </li>
+            }
+          </ul>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <mat-accordion multi>
+    @for (entity of entities(); track entity.id) {
+      <mat-expansion-panel [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="entity-name">{{ entity.displayName || entity.physicalTable }}</span>
+            <code class="entity-table">{{ entity.physicalTable }}</code>
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ mappedInEntity(entity) }} / {{ entity.fields.length }} mapped
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="table-scroll">
+          <table class="fields">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Technical</th>
+                <th>Business name</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>PII</th>
+                <th>Hidden</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (field of visibleFields(entity); track field.id) {
+                <tr>
+                  <td>
+                    <span [class]="statusClass(field.status)">{{ field.status }}</span>
+                    @if (field.source === 'User') { <mat-icon class="src" matTooltip="Manually edited">person</mat-icon> }
+                    @else if (field.source === 'File') { <mat-icon class="src" matTooltip="From metadata file">description</mat-icon> }
+                  </td>
+                  <td>
+                    <code>{{ field.physicalColumn }}</code>
+                    <div class="type">{{ field.physicalType }}</div>
+                    @if (customPropsText(field)) {
+                      <div class="custom" [matTooltip]="customPropsText(field)">⚙ custom</div>
+                    }
+                  </td>
+                  <td>
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="cell">
+                      <input matInput [(ngModel)]="field.displayName" placeholder="—">
+                    </mat-form-field>
+                  </td>
+                  <td>
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="cell wide">
+                      <input matInput [(ngModel)]="field.description" placeholder="—">
+                    </mat-form-field>
+                  </td>
+                  <td>
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="cell">
+                      <input matInput [(ngModel)]="field.category" placeholder="—">
+                    </mat-form-field>
+                  </td>
+                  <td class="center"><mat-checkbox [(ngModel)]="field.isPii"></mat-checkbox></td>
+                  <td class="center"><mat-checkbox [(ngModel)]="field.hidden"></mat-checkbox></td>
+                  <td>
+                    <button mat-icon-button color="primary" (click)="saveField(field)"
+                            [disabled]="savingId() === field.id" matTooltip="Save">
+                      <mat-icon>save</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-expansion-panel>
+    }
+  </mat-accordion>
+
+  @if (!loading() && entities().length === 0) {
+    <div class="empty">No semantic model yet. Click <b>Sync now</b> to read the source schema.</div>
+  }
+</div>
