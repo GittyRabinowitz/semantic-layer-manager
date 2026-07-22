@@ -1,0 +1,54 @@
+{
+  "$comment": "External business metadata for the EShopSource database. Enriches the physical schema discovered by introspection with business names, descriptions, PII flags, hidden flags, categories, and a flexible 'customProperties' bag for per-column extras (currency, format, value labels, masking).",
+  "entities": [
+    {
+      "table": "cust_t",
+      "displayName": "Customer",
+      "description": "Registered shoppers of the online store.",
+      "fields": [
+        { "column": "cust_id",    "displayName": "Customer ID", "category": "Identifiers" },
+        { "column": "f_nm",       "displayName": "First Name",  "category": "Identity" },
+        { "column": "l_nm",       "displayName": "Last Name",   "category": "Identity" },
+        { "column": "eml",        "displayName": "Email",       "category": "Contact", "isPii": true, "customProperties": { "mask": "partial" } },
+        { "column": "created_dt", "displayName": "Signup Date", "category": "Lifecycle", "customProperties": { "format": "dd/MM/yyyy" } },
+        { "column": "cntry_cd",   "description": "Internal ISO country code.", "hidden": true }
+      ]
+    },
+    {
+      "table": "prod_t",
+      "displayName": "Product",
+      "description": "Catalog of products available for sale.",
+      "fields": [
+        { "column": "prod_id",  "displayName": "Product ID",  "category": "Identifiers" },
+        { "column": "prod_nm",  "displayName": "Product Name", "category": "Descriptive" },
+        { "column": "cat_cd",   "displayName": "Category",     "category": "Classification" },
+        { "column": "unit_prc", "displayName": "Unit Price",   "category": "Pricing", "customProperties": { "currency": "ILS", "decimals": 2 } },
+        { "column": "in_stock", "displayName": "In Stock",     "category": "Inventory" }
+      ]
+    },
+    {
+      "table": "ord_hdr",
+      "displayName": "Order",
+      "description": "Orders placed by customers.",
+      "fields": [
+        { "column": "ord_id",  "displayName": "Order ID",     "category": "Identifiers" },
+        { "column": "cust_id", "displayName": "Customer Ref", "category": "Relationships" },
+        { "column": "ord_dt",  "displayName": "Order Date",   "category": "Lifecycle", "customProperties": { "format": "dd/MM/yyyy" } },
+        { "column": "sts",     "displayName": "Status",       "category": "Lifecycle", "customProperties": { "valueLabels": { "N": "New", "S": "Shipped", "C": "Cancelled" } } },
+        { "column": "tot_amt", "displayName": "Total Amount", "category": "Financials", "customProperties": { "currency": "ILS", "decimals": 2 } }
+      ]
+    },
+    {
+      "table": "ord_ln",
+      "displayName": "Order Line",
+      "description": "Individual line items within an order.",
+      "fields": [
+        { "column": "ln_id",   "displayName": "Line ID",     "category": "Identifiers" },
+        { "column": "ord_id",  "displayName": "Order Ref",   "category": "Relationships" },
+        { "column": "prod_id", "displayName": "Product Ref", "category": "Relationships" },
+        { "column": "qty",     "displayName": "Quantity",    "category": "Quantities" },
+        { "column": "ln_prc",  "displayName": "Line Price",  "category": "Financials", "customProperties": { "currency": "ILS", "decimals": 2 } }
+      ]
+    }
+  ]
+}
