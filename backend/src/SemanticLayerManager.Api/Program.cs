@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using SemanticLayerManager.Api.Application.Introspection;
+using SemanticLayerManager.Api.Application.Management;
 using SemanticLayerManager.Api.Application.Metadata;
 using SemanticLayerManager.Api.Application.Sync;
 using SemanticLayerManager.Api.Infrastructure.Introspection;
@@ -32,6 +33,9 @@ builder.Services.AddScoped<ISyncService, SyncService>();
 
 // Metadata file import.
 builder.Services.AddScoped<IMetadataImportService, MetadataImportService>();
+
+// Semantic-layer management (read + manual edits).
+builder.Services.AddScoped<IMappingService, MappingService>();
 
 var app = builder.Build();
 
