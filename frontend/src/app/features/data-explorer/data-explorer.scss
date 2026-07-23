@@ -1,0 +1,57 @@
+.page {
+  padding: 20px 24px 48px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.page-header {
+  h1 { margin: 0 0 4px; font-size: 1.5rem; }
+  .subtitle { margin: 0 0 16px; color: var(--mat-sys-on-surface-variant); }
+}
+
+.picker {
+  margin-bottom: 12px;
+  mat-form-field { min-width: 280px; }
+}
+
+.data-card { padding: 8px 8px 0; }
+
+.table-scroll { overflow-x: auto; }
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--mat-sys-outline-variant);
+    white-space: nowrap;
+
+    .pii {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+      vertical-align: middle;
+      margin-left: 4px;
+      color: #b3261e;
+    }
+  }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    white-space: nowrap;
+  }
+
+  tbody tr:hover { background: var(--mat-sys-surface-variant); }
+}
+
+.empty {
+  padding: 28px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  DataPage, MetadataImportReport, SemanticEntity, SemanticField, SyncReport, UpdateFieldRequest
+  ConsumableEntity, DataPage, MetadataImportReport, SemanticEntity, SemanticField, SyncReport, UpdateFieldRequest
 } from './models';
 
 /** Typed client for the Semantic Layer Manager backend API. */
@@ -32,8 +32,12 @@ export class SemanticApiService {
     return this.http.post<MetadataImportReport>(`${this.base}/metadata/import`, form);
   }
 
-  // ── Consumer data (step 8) ──
-  getData(entity: string, page: number, pageSize: number): Observable<DataPage> {
-    return this.http.get<DataPage>(`${this.base}/data/${entity}`, { params: { page, pageSize } });
+  // ── Consumer data ──
+  getConsumableEntities(): Observable<ConsumableEntity[]> {
+    return this.http.get<ConsumableEntity[]>(`${this.base}/data/entities`);
+  }
+
+  getData(entityId: number, page: number, pageSize: number): Observable<DataPage> {
+    return this.http.get<DataPage>(`${this.base}/data/${entityId}`, { params: { page, pageSize } });
   }
 }

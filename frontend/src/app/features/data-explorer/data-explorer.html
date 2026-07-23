@@ -1,0 +1,66 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Data Explorer</h1>
+    <p class="subtitle">Browse data through the semantic layer — business names, sensitive fields masked.</p>
+  </header>
+
+  <div class="picker">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Business entity</mat-label>
+      <mat-select [value]="selectedId()" (selectionChange)="select($event.value)">
+        @for (entity of entities(); track entity.id) {
+          <mat-option [value]="entity.id">{{ entity.displayName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  @if (data(); as page) {
+    <mat-card appearance="outlined" class="data-card">
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              @for (col of page.columns; track col.name) {
+                <th>
+                  <span>{{ col.name }}</span>
+                  @if (col.isPii) {
+                    <mat-icon class="pii" matTooltip="Sensitive — value is masked">lock</mat-icon>
+                  }
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of page.rows; track $index) {
+              <tr>
+                @for (col of page.columns; track col.name) {
+                  <td>{{ formatValue(row[col.name]) }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (page.rows.length === 0) {
+        <div class="empty">No rows for this entity.</div>
+      }
+
+      <mat-paginator
+        [length]="page.totalRows"
+        [pageSize]="pageSize()"
+        [pageIndex]="pageIndex()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (page)="onPage($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </mat-card>
+  } @else if (!loading() && entities().length === 0) {
+    <div class="empty">No mapped entities yet. Map some fields in <b>Management</b> first.</div>
+  }
+</div>

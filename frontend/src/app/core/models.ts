@@ -65,7 +65,13 @@ export interface MetadataImportReport {
   unmatchedColumns: string[];
 }
 
-// Consumer-side (data explorer) — used from step 8.
+// Consumer-side (data explorer).
+export interface ConsumableEntity {
+  id: number;
+  displayName: string;
+  physicalTable: string;
+}
+
 export interface DataColumn {
   name: string;
   isPii: boolean;

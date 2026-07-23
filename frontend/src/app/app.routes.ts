@@ -5,5 +5,9 @@ export const routes: Routes = [
   {
     path: 'management',
     loadComponent: () => import('./features/management/management').then(m => m.Management)
+  },
+  {
+    path: 'data',
+    loadComponent: () => import('./features/data-explorer/data-explorer').then(m => m.DataExplorer)
   }
 ];
