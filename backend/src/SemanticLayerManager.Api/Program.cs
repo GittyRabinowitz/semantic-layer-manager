@@ -1,5 +1,8 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Events;
 using SemanticLayerManager.Api.Application.DataAccess;
 using SemanticLayerManager.Api.Application.Introspection;
 using SemanticLayerManager.Api.Application.Management;
@@ -9,14 +12,32 @@ using SemanticLayerManager.Api.Infrastructure.DataAccess;
 using SemanticLayerManager.Api.Infrastructure.Introspection;
 using SemanticLayerManager.Api.Infrastructure.Persistence;
 
+const string FrontendCors = "frontend";
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Structured logging.
+builder.Services.AddSerilog(config => config
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .WriteTo.Console());
 
 // ── Services ──
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
+
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+    ?? ["http://localhost:4200"];
+builder.Services.AddCors(options => options.AddPolicy(FrontendCors, policy => policy
+    .WithOrigins(corsOrigins)
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
 
 builder.Services.AddSingleton(TimeProvider.System);
 
@@ -49,12 +70,17 @@ builder.Services.AddScoped<IDataQueryService>(sp => new SqlServerDataQueryServic
 var app = builder.Build();
 
 // ── HTTP pipeline ──
+app.UseExceptionHandler();          // unhandled exceptions -> RFC 7807 ProblemDetails
+app.UseSerilogRequestLogging();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi();               // OpenAPI document at /openapi/v1.json
+    app.MapScalarApiReference();    // interactive API reference at /scalar/v1
 }
 
 app.UseHttpsRedirection();
+app.UseCors(FrontendCors);
 app.UseAuthorization();
 app.MapControllers();
 
