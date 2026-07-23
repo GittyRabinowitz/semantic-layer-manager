@@ -1,9 +1,11 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using SemanticLayerManager.Api.Application.DataAccess;
 using SemanticLayerManager.Api.Application.Introspection;
 using SemanticLayerManager.Api.Application.Management;
 using SemanticLayerManager.Api.Application.Metadata;
 using SemanticLayerManager.Api.Application.Sync;
+using SemanticLayerManager.Api.Infrastructure.DataAccess;
 using SemanticLayerManager.Api.Infrastructure.Introspection;
 using SemanticLayerManager.Api.Infrastructure.Persistence;
 
@@ -36,6 +38,13 @@ builder.Services.AddScoped<IMetadataImportService, MetadataImportService>();
 
 // Semantic-layer management (read + manual edits).
 builder.Services.AddScoped<IMappingService, MappingService>();
+
+// Consumer data access through the semantic layer (dynamic query over the source DB).
+builder.Services.AddScoped<IDataQueryService>(sp => new SqlServerDataQueryService(
+    sp.GetRequiredService<SemanticStoreDbContext>(),
+    sp.GetRequiredService<ISchemaIntrospector>(),
+    builder.Configuration.GetConnectionString("SourceDb")
+    ?? throw new InvalidOperationException("Missing 'SourceDb' connection string.")));
 
 var app = builder.Build();
 
