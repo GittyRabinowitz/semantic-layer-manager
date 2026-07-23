@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SemanticApiService } from '../../core/semantic-api.service';
-import { ConsumableEntity, DataPage } from '../../core/models';
+import { ConsumableEntity, DataColumn, DataPage } from '../../core/models';
 
 @Component({
   selector: 'app-data-explorer',
@@ -55,14 +55,49 @@ export class DataExplorer implements OnInit {
     this.load();
   }
 
-  formatValue(value: unknown): string {
+  /** Presents a raw value in business terms using the column's custom-property hints. */
+  formatValue(value: unknown, column: DataColumn): string {
     if (value === null || value === undefined) return '—';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    const format = column.format;
+
+    // Value labels — e.g. status codes to words (N -> New).
+    if (format?.valueLabels) {
+      const label = format.valueLabels[String(value)];
+      if (label !== undefined) return label;
+    }
+
+    // Currency — e.g. 349 -> ₪349.00.
+    if (format?.currency) {
+      const num = Number(value);
+      if (!isNaN(num)) {
+        const digits = format.decimals ?? 2;
+        return new Intl.NumberFormat('he-IL', {
+          style: 'currency',
+          currency: format.currency,
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        }).format(num);
+      }
+    }
+
+    // Dates — honour a custom pattern (e.g. dd/MM/yyyy), else locale default.
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
       const date = new Date(value);
-      if (!isNaN(date.getTime())) return date.toLocaleDateString();
+      if (!isNaN(date.getTime())) {
+        return format?.format ? this.applyDateFormat(date, format.format) : date.toLocaleDateString();
+      }
     }
+
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     return String(value);
+  }
+
+  private applyDateFormat(date: Date, pattern: string): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return pattern
+      .replace('yyyy', String(date.getFullYear()))
+      .replace('MM', pad(date.getMonth() + 1))
+      .replace('dd', pad(date.getDate()));
   }
 
   private load(): void {

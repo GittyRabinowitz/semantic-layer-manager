@@ -134,6 +134,9 @@ non-hidden columns, under their business names. Security is layered:
   against the live introspected schema and bracket-escaped before use — preventing SQL injection.
 - Paging uses parameterised `OFFSET/FETCH`, ordered by the primary key.
 - **PII** values are **masked** on the way out (short prefix + email domain kept).
+- **Business presentation**: each column's `customProperties` (value labels, currency,
+  date format) travel to the consumer, which applies them — e.g. `S` → `Shipped`,
+  `349` → `₪349.00`, dates as `dd/MM/yyyy`.
 
 **Secure-by-default:** a newly discovered column is `Unmapped` and hidden from consumers until a
 human maps it — so an unreviewed column (possibly PII) is never exposed unmasked.
@@ -154,14 +157,12 @@ human maps it — so an unreviewed column (possibly PII) is never exposed unmask
 - **Column renames** are seen by introspection as *drop + add*, so enrichment attaches to the
   old name and is orphaned; there is no automatic re-map.
 - Schema changes are detected **on sync**, not in real time.
-- The consumer view is intentionally **basic**: read-only, no joins/aggregations/query-builder;
-  `customProperties` such as `valueLabels`/currency are stored but not yet applied to formatting.
+- The consumer view is intentionally **basic**: read-only, no joins/aggregations/query-builder.
 - No authentication / multi-user concurrency; a single source connection.
 
 ## 9. Future improvements
 
 - Scheduled background sync with **drift notifications**.
-- **Apply `customProperties`** in the consumer view (currency, date/number formats, value labels).
 - A **re-map** action for renamed columns; richer conflict resolution (per-source precedence
   with a review queue) instead of pure last-write-wins.
 - Virtual/computed fields defined in the metadata file.

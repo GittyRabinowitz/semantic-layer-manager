@@ -39,7 +39,7 @@
             @for (row of page.rows; track $index) {
               <tr>
                 @for (col of page.columns; track col.name) {
-                  <td>{{ formatValue(row[col.name]) }}</td>
+                  <td>{{ formatValue(row[col.name], col) }}</td>
                 }
               </tr>
             }

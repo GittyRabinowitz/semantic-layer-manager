@@ -72,9 +72,18 @@ export interface ConsumableEntity {
   physicalTable: string;
 }
 
+export interface ColumnFormat {
+  valueLabels?: Record<string, string>;
+  currency?: string;
+  decimals?: number;
+  format?: string;
+  mask?: string;
+}
+
 export interface DataColumn {
   name: string;
   isPii: boolean;
+  format: ColumnFormat | null;
 }
 
 export interface DataPage {
