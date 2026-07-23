@@ -143,8 +143,8 @@ human maps it — so an unreviewed column (possibly PII) is never exposed unmask
 
 ## 7. Key design decisions & assumptions
 
-- **SQL Server** as both source and store engine; connection strings are configurable (default
-  `localhost`, LocalDB documented).
+- **SQL Server 2022** as both source and store engine; connection strings are configurable
+  (default `localhost`).
 - **EF Core for the store, Dapper for the source** (section 2).
 - **Hybrid metadata model** (section 3).
 - **Last-write-wins** merge with source/timestamp tracking (section 5).

@@ -31,7 +31,7 @@ the layer, with PII masked).
 
 - **.NET SDK 10** — `dotnet --version` should print `10.x`
 - **Node.js 20.19+ / 22 / 24** and npm — `node --version`
-- **SQL Server** — either a local instance (default `localhost`) or **SQL Server LocalDB**
+- **SQL Server 2022** — a local instance reachable at `localhost` (Windows Authentication)
 - **sqlcmd** or SQL Server Management Studio (to run the database scripts)
 
 No `dotnet-ef` tool is required: the backend applies its own EF migrations on startup.
@@ -50,26 +50,15 @@ sqlcmd -S localhost -i database/01_create_source_db.sql
 sqlcmd -S localhost -i database/02_seed_source_data.sql
 ```
 
-> Using **LocalDB**? Use `-S "(localdb)\MSSQLLocalDB"` instead of `-S localhost`.
 > Prefer a GUI? Open the two `.sql` files in SSMS and run them.
 
-### 2. Configure connection strings (only if not using `localhost`)
-
 Connection strings live in
-[`backend/src/SemanticLayerManager.Api/appsettings.json`](backend/src/SemanticLayerManager.Api/appsettings.json).
-They default to `Server=localhost`. To use LocalDB, change both to
-`Server=(localdb)\\MSSQLLocalDB`:
+[`backend/src/SemanticLayerManager.Api/appsettings.json`](backend/src/SemanticLayerManager.Api/appsettings.json)
+and default to `Server=localhost`. Adjust `Server=` only if your SQL Server instance is
+named differently. The `SemanticLayerStore` (mapping) database is created **automatically**
+on first run — no manual step, and existing data is preserved across restarts.
 
-```json
-"ConnectionStrings": {
-  "SemanticStore": "Server=(localdb)\\MSSQLLocalDB;Database=SemanticLayerStore;Trusted_Connection=True;TrustServerCertificate=True;",
-  "SourceDb":      "Server=(localdb)\\MSSQLLocalDB;Database=EShopSource;Trusted_Connection=True;TrustServerCertificate=True;"
-}
-```
-
-The `SemanticLayerStore` database (the mapping store) is created automatically on first run.
-
-### 3. Run the backend
+### 2. Run the backend
 
 ```bash
 cd backend
@@ -79,7 +68,7 @@ dotnet run --project src/SemanticLayerManager.Api --urls http://localhost:5281
 - API base: `http://localhost:5281/api`
 - Interactive API reference (Scalar): `http://localhost:5281/scalar/v1`
 
-### 4. Run the frontend
+### 3. Run the frontend
 
 ```bash
 cd frontend
