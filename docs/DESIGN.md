@@ -58,6 +58,57 @@ engines are pure functions with no I/O, which makes them directly unit-testable.
 
 ## 3. Data model
 
+There are **two** data models: the **business (source) model** we designed for the demo, and
+the **semantic store** that describes and maps over it.
+
+### 3.1 Business (source) data model — e-commerce
+
+```mermaid
+erDiagram
+  cust_t ||--o{ ord_hdr : places
+  ord_hdr ||--o{ ord_ln : contains
+  prod_t ||--o{ ord_ln : "referenced by"
+  cust_t {
+    int cust_id PK
+    nvarchar f_nm
+    nvarchar l_nm
+    nvarchar eml "PII"
+    datetime2 created_dt
+    char cntry_cd
+  }
+  prod_t {
+    int prod_id PK
+    nvarchar prod_nm
+    nvarchar cat_cd
+    decimal unit_prc
+    bit in_stock
+  }
+  ord_hdr {
+    int ord_id PK
+    int cust_id FK
+    datetime2 ord_dt
+    char sts
+    decimal tot_amt
+  }
+  ord_ln {
+    int ln_id PK
+    int ord_id FK
+    int prod_id FK
+    int qty
+    decimal ln_prc
+  }
+```
+
+A small e-commerce domain: **customers** (`cust_t`) place **orders** (`ord_hdr`); each order
+has **line items** (`ord_ln`) that reference **products** (`prod_t`), enforced by foreign keys.
+It was chosen deliberately because it provides (a) real **relationships** to expose in business
+terms, (b) **terse/technical names** (`f_nm`, `eml`, `sts`, `tot_amt`) that make the semantic
+layer's translation valuable, and (c) natural **PII** (`eml`) to demonstrate masking. It is
+created and seeded by the scripts in [`/database`](../database). The system treats this schema
+as **unknown** and discovers it by introspection — it is not modelled in code.
+
+### 3.2 Semantic store data model
+
 ```mermaid
 erDiagram
   SemanticEntity ||--o{ SemanticField : has
@@ -82,16 +133,13 @@ erDiagram
   }
 ```
 
-The metadata model is **hybrid**: a typed core the engine reasons about (`DisplayName`,
+Each `SemanticEntity` maps to one physical table, and each `SemanticField` to one physical
+column. The model is **hybrid**: a typed core the engine reasons about (`DisplayName`,
 `Description`, `IsPii`, `Hidden`, `Category`) plus a flexible `CustomProperties` JSON bag for
 per-column extras that vary by column (currency, date format, value labels, masking). The
 rule: *if the engine branches on it, it is a typed column; if it is only descriptive, it goes
 in the bag.* Each field also records `Status`, `Source`, and `LastModified` for reconciliation
 and merge bookkeeping.
-
-**Example domain** — an e-commerce source DB with deliberately terse names:
-`cust_t`, `prod_t`, `ord_hdr`, `ord_ln` (with foreign keys). This gives relationships,
-"ugly" names worth translating, and natural PII (`eml`).
 
 ## 4. Sync process
 
