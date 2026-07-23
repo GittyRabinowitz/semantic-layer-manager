@@ -69,6 +69,14 @@ builder.Services.AddScoped<IDataQueryService>(sp => new SqlServerDataQueryServic
 
 var app = builder.Build();
 
+// Ensure the semantic store schema exists (applies EF migrations on startup so the
+// reviewer does not need the dotnet-ef tool). The source database is created separately
+// via the SQL scripts in /database.
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<SemanticStoreDbContext>().Database.Migrate();
+}
+
 // ── HTTP pipeline ──
 app.UseExceptionHandler();          // unhandled exceptions -> RFC 7807 ProblemDetails
 app.UseSerilogRequestLogging();
