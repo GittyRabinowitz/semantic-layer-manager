@@ -22,9 +22,9 @@ flowchart LR
   end
   subgraph API[".NET 10 Web API"]
     C["Controllers (thin)"]
-    subgraph APP["Application"]
-      SY["SyncService / SchemaReconciler"]
-      ME["MetadataImport / Merger"]
+    subgraph APP["Application services"]
+      SY["SyncService"]
+      ME["MetadataImportService"]
       MA["MappingService"]
       DQ["DataQueryService"]
     end
@@ -53,8 +53,13 @@ touches two databases with opposite characteristics:
 EF Core is perfect for our own fixed schema, but useless against a database whose tables we
 don't know in advance — so the source database is read via introspection and dynamic,
 parameterised SQL. The backend is a single project layered by folder
-(`Domain` / `Application` / `Infrastructure` / `Controllers`); the reconcile and merge
-engines are pure functions with no I/O, which makes them directly unit-testable.
+(`Domain` / `Application` / `Infrastructure` / `Controllers`).
+
+Each application service is a thin I/O **shell** around a pure **core** (the
+"functional core, imperative shell" pattern): `SyncService` reads the schema and store, then
+delegates the actual diff to the pure `SchemaReconciler`; likewise `MetadataImportService`
+delegates the merge to the pure `MetadataMerger`. Because the cores take plain in-memory
+objects and touch no I/O, the hard logic is directly unit-testable without a database.
 
 ## 3. Data model
 
