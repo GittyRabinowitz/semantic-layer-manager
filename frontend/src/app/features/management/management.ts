@@ -9,10 +9,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { HttpErrorResponse } from '@angular/common/http';
 import { SemanticApiService } from '../../core/semantic-api.service';
+import { NotificationService } from '../../core/notification.service';
 import { MappingStatus, SemanticEntity, SemanticField, SyncReport } from '../../core/models';
 
 @Component({
@@ -27,7 +26,7 @@ import { MappingStatus, SemanticEntity, SemanticField, SyncReport } from '../../
 })
 export class Management implements OnInit {
   private readonly api = inject(SemanticApiService);
-  private readonly snack = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
 
   readonly entities = signal<SemanticEntity[]>([]);
   readonly loading = signal(false);
@@ -46,7 +45,7 @@ export class Management implements OnInit {
     this.loading.set(true);
     this.api.sync().subscribe({
       next: report => { this.syncReport.set(report); this.reload(); },
-      error: err => { this.loading.set(false); this.fail('Initial sync failed', err); }
+      error: err => { this.loading.set(false); this.notify.error('Initial sync failed', err); }
     });
   }
 
@@ -55,12 +54,12 @@ export class Management implements OnInit {
     this.api.sync().subscribe({
       next: report => {
         this.syncReport.set(report);
-        this.snack.open(
+        this.notify.success(
           `Sync complete — ${report.newColumns} new, ${report.orphanedColumns} orphaned, ${report.typeChangedColumns} type-changed`,
-          'OK', { duration: 4000 });
+          4000);
         this.reload();
       },
-      error: err => { this.loading.set(false); this.fail('Sync failed', err); }
+      error: err => { this.loading.set(false); this.notify.error('Sync failed', err); }
     });
   }
 
@@ -73,12 +72,12 @@ export class Management implements OnInit {
     this.loading.set(true);
     this.api.importMetadata(file).subscribe({
       next: report => {
-        this.snack.open(
+        this.notify.success(
           `Imported — ${report.fieldsApplied} applied, ${report.fieldsUnchanged} unchanged, ${report.fieldsUnmatched} unmatched`,
-          'OK', { duration: 5000 });
+          5000);
         this.reload();
       },
-      error: err => { this.loading.set(false); this.fail('Metadata import failed', err); }
+      error: err => { this.loading.set(false); this.notify.error('Metadata import failed', err); }
     });
   }
 
@@ -95,9 +94,9 @@ export class Management implements OnInit {
       next: updated => {
         Object.assign(field, updated);
         this.savingId.set(null);
-        this.snack.open(`Saved "${updated.displayName ?? updated.physicalColumn}"`, 'OK', { duration: 2500 });
+        this.notify.success(`Saved "${updated.displayName ?? updated.physicalColumn}"`, 2500);
       },
-      error: err => { this.savingId.set(null); this.fail('Save failed', err); }
+      error: err => { this.savingId.set(null); this.notify.error('Save failed', err); }
     });
   }
 
@@ -121,17 +120,11 @@ export class Management implements OnInit {
     this.loading.set(true);
     this.api.getEntities().subscribe({
       next: entities => { this.entities.set(entities); this.loading.set(false); },
-      error: err => { this.loading.set(false); this.fail('Failed to load the semantic model', err); }
+      error: err => { this.loading.set(false); this.notify.error('Failed to load the semantic model', err); }
     });
   }
 
   private countStatus(status: MappingStatus): number {
     return this.entities().reduce((n, e) => n + e.fields.filter(f => f.status === status).length, 0);
-  }
-
-  private fail(message: string, err: unknown): void {
-    const detail = err instanceof HttpErrorResponse ? ` (${err.status})` : '';
-    console.error(message, err);
-    this.snack.open(message + detail, 'Dismiss', { duration: 6000 });
   }
 }

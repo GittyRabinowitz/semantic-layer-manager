@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SemanticLayerManager.Api.Domain;
 using SemanticLayerManager.Api.Infrastructure.Persistence;
@@ -45,9 +44,7 @@ public class MappingService(
 
         // A manual edit acknowledges any pending flag except a truly missing column.
         if (field.Status != MappingStatus.Orphaned)
-            field.Status = string.IsNullOrWhiteSpace(field.DisplayName)
-                ? MappingStatus.Unmapped
-                : MappingStatus.Mapped;
+            field.Status = field.PresentStatus;
 
         await db.SaveChangesAsync(cancellationToken);
         return ToDto(field);
@@ -75,11 +72,8 @@ public class MappingService(
         field.IsPii,
         field.Hidden,
         field.Category,
-        ParseCustomProperties(field.CustomProperties),
+        field.GetCustomProperties(),
         field.Status,
         field.Source,
         field.LastModified);
-
-    private static JsonElement? ParseCustomProperties(string? raw) =>
-        string.IsNullOrWhiteSpace(raw) ? null : JsonSerializer.Deserialize<JsonElement>(raw);
 }

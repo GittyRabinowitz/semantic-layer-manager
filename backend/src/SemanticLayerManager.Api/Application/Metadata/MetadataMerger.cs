@@ -124,9 +124,7 @@ public static class MetadataMerger
             // A named, physically-present field becomes Mapped. Orphaned/type-changed
             // states are left alone — the file cannot resurrect a missing column.
             if (field.Status is not (MappingStatus.Orphaned or MappingStatus.TypeChanged))
-                field.Status = string.IsNullOrWhiteSpace(field.DisplayName)
-                    ? MappingStatus.Unmapped
-                    : MappingStatus.Mapped;
+                field.Status = field.PresentStatus;
         }
 
         return changed;

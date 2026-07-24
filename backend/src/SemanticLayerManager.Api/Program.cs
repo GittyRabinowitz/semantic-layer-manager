@@ -41,15 +41,16 @@ builder.Services.AddCors(options => options.AddPolicy(FrontendCors, policy => po
 
 builder.Services.AddSingleton(TimeProvider.System);
 
+var sourceDbConnectionString = builder.Configuration.GetConnectionString("SourceDb")
+    ?? throw new InvalidOperationException("Missing 'SourceDb' connection string.");
+
 // Semantic layer store (our own code-first schema).
 builder.Services.AddDbContext<SemanticStoreDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SemanticStore")));
 
 // Source database introspection (dynamic, unknown schema — raw Dapper, not EF).
 builder.Services.AddScoped<ISchemaIntrospector>(_ =>
-    new SqlServerSchemaIntrospector(
-        builder.Configuration.GetConnectionString("SourceDb")
-        ?? throw new InvalidOperationException("Missing 'SourceDb' connection string.")));
+    new SqlServerSchemaIntrospector(sourceDbConnectionString));
 
 // Sync engine.
 builder.Services.AddScoped<ISyncService, SyncService>();
@@ -64,8 +65,7 @@ builder.Services.AddScoped<IMappingService, MappingService>();
 builder.Services.AddScoped<IDataQueryService>(sp => new SqlServerDataQueryService(
     sp.GetRequiredService<SemanticStoreDbContext>(),
     sp.GetRequiredService<ISchemaIntrospector>(),
-    builder.Configuration.GetConnectionString("SourceDb")
-    ?? throw new InvalidOperationException("Missing 'SourceDb' connection string.")));
+    sourceDbConnectionString));
 
 var app = builder.Build();
 

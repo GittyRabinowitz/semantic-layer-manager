@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -99,13 +98,10 @@ public class SqlServerDataQueryService(
         }
 
         var columns = visible
-            .Select(f => new DataColumn(f.DisplayName!, f.IsPii, ParseFormat(f.CustomProperties)))
+            .Select(f => new DataColumn(f.DisplayName!, f.IsPii, f.GetCustomProperties()))
             .ToList();
         return new DataPage(entity.DisplayName ?? entity.PhysicalTable, columns, rows, page, pageSize, totalRows);
     }
-
-    private static JsonElement? ParseFormat(string? customProperties) =>
-        string.IsNullOrWhiteSpace(customProperties) ? null : JsonSerializer.Deserialize<JsonElement>(customProperties);
 
     private static bool IsVisible(SemanticField field) =>
         field.Status == MappingStatus.Mapped && !field.Hidden && !string.IsNullOrWhiteSpace(field.DisplayName);

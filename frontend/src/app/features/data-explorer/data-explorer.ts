@@ -1,14 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SemanticApiService } from '../../core/semantic-api.service';
+import { NotificationService } from '../../core/notification.service';
 import { ConsumableEntity, DataColumn, DataPage } from '../../core/models';
 
 @Component({
@@ -22,7 +21,7 @@ import { ConsumableEntity, DataColumn, DataPage } from '../../core/models';
 })
 export class DataExplorer implements OnInit {
   private readonly api = inject(SemanticApiService);
-  private readonly snack = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
 
   readonly entities = signal<ConsumableEntity[]>([]);
   readonly selectedId = signal<number | null>(null);
@@ -39,7 +38,7 @@ export class DataExplorer implements OnInit {
         this.loading.set(false);
         if (entities.length > 0) this.select(entities[0].id);
       },
-      error: err => { this.loading.set(false); this.fail('Failed to load entities', err); }
+      error: err => { this.loading.set(false); this.notify.error('Failed to load entities', err); }
     });
   }
 
@@ -107,13 +106,7 @@ export class DataExplorer implements OnInit {
     this.loading.set(true);
     this.api.getData(id, this.pageIndex() + 1, this.pageSize()).subscribe({
       next: page => { this.data.set(page); this.loading.set(false); },
-      error: err => { this.loading.set(false); this.fail('Failed to load data', err); }
+      error: err => { this.loading.set(false); this.notify.error('Failed to load data', err); }
     });
-  }
-
-  private fail(message: string, err: unknown): void {
-    const detail = err instanceof HttpErrorResponse ? ` (${err.status})` : '';
-    console.error(message, err);
-    this.snack.open(message + detail, 'Dismiss', { duration: 6000 });
   }
 }

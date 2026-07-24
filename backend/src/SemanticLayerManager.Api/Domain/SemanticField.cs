@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace SemanticLayerManager.Api.Domain;
 
 /// <summary>
@@ -55,4 +57,19 @@ public class SemanticField
 
     /// <summary>UTC timestamp of the last write; supports last-write-wins.</summary>
     public DateTime LastModified { get; set; } = DateTime.UtcNow;
+
+    // ── Derived helpers ──
+
+    /// <summary>
+    /// The status a physically-present field should have based on whether it is named:
+    /// <see cref="MappingStatus.Mapped"/> once it has a business name, otherwise
+    /// <see cref="MappingStatus.Unmapped"/>. Callers decide whether to preserve
+    /// <see cref="MappingStatus.Orphaned"/> / <see cref="MappingStatus.TypeChanged"/>.
+    /// </summary>
+    public MappingStatus PresentStatus =>
+        string.IsNullOrWhiteSpace(DisplayName) ? MappingStatus.Unmapped : MappingStatus.Mapped;
+
+    /// <summary>Parses the <see cref="CustomProperties"/> JSON bag, or null when empty.</summary>
+    public JsonElement? GetCustomProperties() =>
+        string.IsNullOrWhiteSpace(CustomProperties) ? null : JsonSerializer.Deserialize<JsonElement>(CustomProperties);
 }

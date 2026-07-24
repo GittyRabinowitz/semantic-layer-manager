@@ -83,7 +83,7 @@ public static class SchemaReconciler
             else if (field.Status is MappingStatus.Orphaned or MappingStatus.TypeChanged)
             {
                 // The column is back / stable again: recompute its normal status.
-                field.Status = PresentStatus(field);
+                field.Status = field.PresentStatus;
                 field.LastModified = timestampUtc;
                 changes.Add(new SyncChange(table.Name, column.Name, SyncChangeType.Restored, null));
             }
@@ -91,7 +91,7 @@ public static class SchemaReconciler
             {
                 // Keep status aligned with mapped-ness, but only write on real change
                 // (preserves idempotency: a no-op resync produces no changes).
-                var expected = PresentStatus(field);
+                var expected = field.PresentStatus;
                 if (field.Status != expected)
                 {
                     field.Status = expected;
@@ -138,10 +138,6 @@ public static class SchemaReconciler
             }
         }
     }
-
-    /// <summary>A physically-present field is Mapped once it has a business name, else Unmapped.</summary>
-    private static MappingStatus PresentStatus(SemanticField field) =>
-        string.IsNullOrWhiteSpace(field.DisplayName) ? MappingStatus.Unmapped : MappingStatus.Mapped;
 
     private static SyncReport BuildReport(List<SemanticEntity> entities, List<SyncChange> changes)
     {
